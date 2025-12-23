@@ -1,28 +1,37 @@
+import argparse
 import pandas as pd
-import mlflow
-import mlflow.sklearn
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
+import mlflow
+import mlflow.sklearn
 
-# Load data
-path = 'Membangun Model\Concrete Compressive Strength_preprocessing.csv'
-df = pd.read_csv(path)
+print("Running modelling.py...")
 
-X = df.drop('concrete_compressive_strength', axis=1)
-y = df['concrete_compressive_strength']
+parser = argparse.ArgumentParser()
+parser.add_argument("--test_size", type=float, default=0.2)
+args = parser.parse_args()
 
-# Split data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+df = pd.read_csv("../MLProject/Concrete Compressive Strength_preprocessing.csv")
 
-# Autologging
-mlflow.sklearn.autolog()
+X = df.drop("quality", axis=1)
+y = df["quality"]
 
-# MLFlow run
-mlflow.set_tracking_uri("http://127.0.0.1:5000")
-mlflow.set_experiment("concrete-compressive-strength_randomforest")
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=args.test_size, random_state=42
+)
 
-with mlflow.start_run(run_name="experiment_concrete_compressive_strength"):
-    model = RandomForestRegressor(n_estimators=100, random_state=42)
+model = RandomForestRegressor(random_state=42)
+
+with mlflow.start_run():
     model.fit(X_train, y_train)
+    preds = model.predict(X_test)
+    score = r2_score(y_test, preds)
 
-print("Model training complete and logged to MLflow.")
+    print("Model finished.")
+    print("R2 Score:", score)
+
+    mlflow.log_param("test_size", args.test_size)
+    mlflow.log_metric("r2_score", score)
+
+    mlflow.sklearn.log_model(model, "model")
