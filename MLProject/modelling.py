@@ -14,8 +14,8 @@ args = parser.parse_args()
 
 df = pd.read_csv("../MLProject/Concrete Compressive Strength_preprocessing.csv")
 
-X = df.drop("quality", axis=1)
-y = df["quality"]
+X = df.drop('concrete_compressive_strength', axis=1)
+y = df['concrete_compressive_strength']
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=args.test_size, random_state=42
